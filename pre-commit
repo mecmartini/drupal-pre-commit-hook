@@ -1,0 +1,59 @@
+#!/bin/sh
+
+commitfailed=0
+
+# ESLint
+jsfiles=$(git diff --cached --name-only --diff-filter=ACM HEAD | grep -E '\.js$')
+
+if [ "$jsfiles" != "" ]
+then
+    jsfailed=0
+    echo "Running ESLint..."
+    /usr/local/bin/node ./web/node_modules/.bin/eslint $jsfiles >/dev/null
+    if [ $? != 0 ]
+    then
+        for jsfile in ${jsfiles}
+        do
+            /usr/local/bin/node ./web/node_modules/.bin/eslint --fix $jsfile >/dev/null
+            git add $jsfile
+            /usr/local/bin/node ./web/node_modules/.bin/eslint $jsfile >/dev/null
+            if [ $? != 0 ] ; then
+                jsfailed=1
+            fi
+        done;
+    fi
+
+    if [ $jsfailed != 0 ]
+    then
+        echo "ESLint failed, errors found not fixable automatically, git commit denied!"
+        commitfailed=$jsfailed
+    fi
+fi
+
+# Code Sniffer
+drupalfiles=$(git diff --cached --name-only  --diff-filter=ACM HEAD | grep -E '\.php$|\.module$|\.inc$|\.install$|\.test$|\.profile$|\.theme$|\.css$|\.info$|\.txt$|\.md$|\.yml$')
+
+if [ "$drupalfiles" != "" ]
+then
+    drupalfailed=0
+    echo "Running Code Sniffer..."
+    ./vendor/bin/phpcs --standard=Drupal --encoding=utf-8 -n -p $drupalfiles >/dev/null
+    if [ $? != 0 ]
+    then
+        ./vendor/bin/phpcbf --standard=Drupal --encoding=utf-8 -n -p $drupalfiles >/dev/null
+        git add $drupalfiles
+        ./vendor/bin/phpcs --standard=Drupal --encoding=utf-8 -n -p $drupalfiles >/dev/null
+        if [ $? != 0 ]
+        then
+            drupalfailed=1
+        fi
+    fi
+
+    if [ $drupalfailed != 0 ]
+    then
+        echo "PHPCS failed, errors found not fixable automatically, git commit denied!"
+        commitfailed=$drupalfailed
+    fi
+fi
+
+exit $commitfailed
