@@ -1,0 +1,1 @@
+# drupal-pre-commit-hook
