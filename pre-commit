@@ -1,22 +1,45 @@
 #!/bin/sh
+#
+# Pre-Commit hook script for Drupal 8.x to check your code against ESLint and PHPCS code sniffer.
+#
+# Requirements:
+#   Drupal 8.x
+#   NodeJS
+#   ESLint
+#   PHP Code Sniffer (phpcs) with Drupal Coder (https://www.drupal.org/project/coder)
+#
+# Usage:
+#   In your terminal: $ cd /path/to/your/project/.git/hooks
+#   Download the pre-commit script: $ curl -O https://raw.githubusercontent.com/mecmartini/drupal-pre-commit-hook/master/pre-commit
+#   Make sure script is executable : $ chmod +x pre-commit
+#   Esit the script with your favorite editor and setup the bin tools on the #Setup section
+#   Ready to commit!
+#
 
+# Setup
 commitfailed=0
+NODE_BIN="/usr/local/bin/node"
+ESLINT_BIN="./web/node_modules/.bin/eslint"
+PHPCS_BIN="./vendor/bin/phpcs"
+PHPCBF_BIN="./vendor/bin/phpcbf"
 
-# ESLint
+#### ESLint
+
+# Get js files (added to commit) to process with ESLint
 jsfiles=$(git diff --cached --name-only --diff-filter=ACM HEAD | grep -E '\.js$')
 
 if [ "$jsfiles" != "" ]
 then
     jsfailed=0
     echo "Running ESLint..."
-    /usr/local/bin/node ./web/node_modules/.bin/eslint $jsfiles >/dev/null
+    $NODE_BIN $ESLINT_BIN $jsfiles >/dev/null
     if [ $? != 0 ]
     then
         for jsfile in ${jsfiles}
         do
-            /usr/local/bin/node ./web/node_modules/.bin/eslint --fix $jsfile >/dev/null
+            $NODE_BIN $ESLINT_BIN --fix $jsfile >/dev/null
             git add $jsfile
-            /usr/local/bin/node ./web/node_modules/.bin/eslint $jsfile >/dev/null
+            $NODE_BIN $ESLINT_BIN $jsfile >/dev/null
             if [ $? != 0 ] ; then
                 jsfailed=1
             fi
@@ -30,19 +53,23 @@ then
     fi
 fi
 
-# Code Sniffer
+#### End of ESLint
+
+
+#### Code Sniffer
+
 drupalfiles=$(git diff --cached --name-only  --diff-filter=ACM HEAD | grep -E '\.php$|\.module$|\.inc$|\.install$|\.test$|\.profile$|\.theme$|\.css$|\.info$|\.txt$|\.md$|\.yml$')
 
 if [ "$drupalfiles" != "" ]
 then
     drupalfailed=0
     echo "Running Code Sniffer..."
-    ./vendor/bin/phpcs --standard=Drupal --encoding=utf-8 -n -p $drupalfiles >/dev/null
+    $PHPCS_BIN --standard=Drupal --encoding=utf-8 -n -p $drupalfiles >/dev/null
     if [ $? != 0 ]
     then
-        ./vendor/bin/phpcbf --standard=Drupal --encoding=utf-8 -n -p $drupalfiles >/dev/null
+        $PHPCBF_BIN --standard=Drupal --encoding=utf-8 -n -p $drupalfiles >/dev/null
         git add $drupalfiles
-        ./vendor/bin/phpcs --standard=Drupal --encoding=utf-8 -n -p $drupalfiles >/dev/null
+        $PHPCS_BIN --standard=Drupal --encoding=utf-8 -n -p $drupalfiles >/dev/null
         if [ $? != 0 ]
         then
             drupalfailed=1
@@ -55,5 +82,7 @@ then
         commitfailed=$drupalfailed
     fi
 fi
+
+#### End of Code Sniffer
 
 exit $commitfailed
