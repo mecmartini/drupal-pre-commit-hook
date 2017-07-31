@@ -17,12 +17,10 @@ Go to your drupal subtheme folder (or create this one).
 * 2 - Download the pre-commit hook script `curl -O https://raw.githubusercontent.com/mecmartini/drupal-pre-commit-hook/master/pre-commit`
 * 3 - Make sure script is executable `chmod +x pre-commit`
 * 4 - Edit the script with your favorite editor and setup the bin tools on the `#Setup` section:
-
-    # Setup
-    commitfailed=0
-    NODE_BIN="/usr/local/bin/node"
-    ESLINT_BIN="./web/node_modules/.bin/eslint"
-    PHPCS_BIN="./vendor/bin/phpcs"
-    PHPCBF_BIN="./vendor/bin/phpcbf"
-
+  `# Setup`
+  `commitfailed=0`
+  `NODE_BIN="/usr/local/bin/node"`
+  `ESLINT_BIN="./web/node_modules/.bin/eslint"`
+  `PHPCS_BIN="./vendor/bin/phpcs"`
+  `PHPCBF_BIN="./vendor/bin/phpcbf"`
 * 5 - Ready to commit!
