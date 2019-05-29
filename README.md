@@ -1,4 +1,5 @@
 # Drupal pre-commit hook
+### by [SoulWeb Solutions](https://soulweb.it)
 
 Pre-Commit hook script for Drupal 8.x to check your Drupal coding standard and more with ESLint and PHPCS code sniffer. Auto-fix enabled!
 
